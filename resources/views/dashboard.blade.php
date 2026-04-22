@@ -6,6 +6,7 @@
 <title>Rythmiq — IoT Health Monitoring</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/dashboard.css">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
 
@@ -518,11 +519,34 @@ updateConditionUI();
 
 <script>
 // ===== PROFILE PANEL =====
-function openProfilePanel() {
+const PF_CSRF = '{{ csrf_token() }}';
+
+async function openProfilePanel() {
   document.getElementById('profilePanel').classList.add('open');
   document.getElementById('profileOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+
+  // Load fresh data from database every time panel opens
+  try {
+    const res  = await fetch('/profile', { headers: { 'Accept': 'application/json' } });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('pf-name').value = data.name || '';
+      const initials = (data.name || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      document.getElementById('pf-initials').textContent = initials;
+      if (data.dob) {
+        document.getElementById('pf-dob').value = data.dob;
+        document.getElementById('pf-age-display').value = pfCalcAge(data.dob) + ' tahun';
+      } else {
+        document.getElementById('pf-age-display').value = data.age ? data.age + ' tahun' : '—';
+        document.getElementById('pf-dob').value = '';
+      }
+    }
+  } catch (err) {
+    console.error('Gagal load profile:', err);
+  }
 }
+
 function closeProfilePanel() {
   document.getElementById('profilePanel').classList.remove('open');
   document.getElementById('profileOverlay').classList.remove('open');
@@ -568,31 +592,51 @@ function pfCancel() {
   document.getElementById('pf-cancel-btn').style.display = 'none';
 }
 
-function pfSave() {
+async function pfSave() {
   const name = document.getElementById('pf-name').value.trim();
   const dob  = document.getElementById('pf-dob').value;
   if (!name) { pfShowToast('Nama tidak boleh kosong.'); return; }
 
-  if (dob) {
-    const age = pfCalcAge(dob);
-    document.getElementById('pf-age-display').value = age + ' tahun';
+  const saveBtn = document.getElementById('pf-save-btn');
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Menyimpan…`;
+
+  try {
+    const res  = await fetch('/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': PF_CSRF, 'Accept': 'application/json' },
+      body: JSON.stringify({ name, dob: dob || null }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById('pf-name').value = data.name;
+      const initials = data.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      document.getElementById('pf-initials').textContent = initials;
+      if (data.age !== null && data.age !== undefined) {
+        document.getElementById('pf-age-display').value = data.age + ' tahun';
+      }
+
+      const nameEl = document.getElementById('pf-name');
+      nameEl.setAttribute('readonly', true);
+      nameEl.classList.remove('editable');
+
+      document.getElementById('pf-age-display-wrap').style.display = 'block';
+      document.getElementById('pf-age-date-wrap').style.display    = 'none';
+      document.getElementById('pf-edit-btn').style.display   = 'flex';
+      document.getElementById('pf-save-btn').style.display   = 'none';
+      document.getElementById('pf-cancel-btn').style.display = 'none';
+
+      pfShowToast('Profile berhasil disimpan ✓');
+    } else {
+      pfShowToast(data.message || 'Gagal menyimpan.');
+    }
+  } catch (err) {
+    pfShowToast('Terjadi kesalahan. Coba lagi.');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Simpan`;
   }
-
-  const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-  document.getElementById('pf-initials').textContent = initials;
-
-  const nameEl = document.getElementById('pf-name');
-  nameEl.setAttribute('readonly', true);
-  nameEl.classList.remove('editable');
-
-  document.getElementById('pf-age-display-wrap').style.display = 'block';
-  document.getElementById('pf-age-date-wrap').style.display    = 'none';
-
-  document.getElementById('pf-edit-btn').style.display   = 'flex';
-  document.getElementById('pf-save-btn').style.display   = 'none';
-  document.getElementById('pf-cancel-btn').style.display = 'none';
-
-  pfShowToast('Profile berhasil disimpan ✓');
 }
 
 function pfCalcAge(dob) {

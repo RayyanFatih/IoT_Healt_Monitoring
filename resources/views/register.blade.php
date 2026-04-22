@@ -7,6 +7,7 @@
 <meta name="description" content="Buat akun Rythmiq IoT Health Monitoring baru.">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/auth.css">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
 
@@ -208,7 +209,7 @@ function hideAll() {
   document.querySelectorAll('.form-input').forEach(el => el.classList.remove('error'));
 }
 
-// ---- Submit ----
+// ---- Submit register to backend ----
 async function handleRegister(e) {
   e.preventDefault();
   hideAll();
@@ -237,14 +238,47 @@ async function handleRegister(e) {
   btn.disabled = true;
   btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Membuat akun…`;
 
-  const hashed = await hashPassword(pw.value);
-  console.log('Hashed password (SHA-256):', hashed);
+  const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
-  setTimeout(() => {
-    document.getElementById('regFormWrap').style.display = 'none';
-    document.getElementById('regSuccess').classList.add('show');
-    setTimeout(() => { window.location.href = '/login'; }, 1800);
-  }, 900);
+  try {
+    const res = await fetch('/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': CSRF,
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        name: name.value.trim(),
+        email: email.value,
+        password: pw.value,
+        password_confirmation: confirm.value,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById('regFormWrap').style.display = 'none';
+      document.getElementById('regSuccess').classList.add('show');
+      setTimeout(() => { window.location.href = '/login'; }, 1800);
+    } else {
+      // Show validation errors from server
+      if (data.errors) {
+        if (data.errors.name)     showError('name-error',      data.errors.name[0]);
+        if (data.errors.email)    showError('reg-email-error', data.errors.email[0]);
+        if (data.errors.password) showError('reg-pw-error',    data.errors.password[0]);
+      } else {
+        showError('reg-email-error', data.message || 'Terjadi kesalahan.');
+      }
+      btn.disabled = false;
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg> Buat Akun`;
+    }
+  } catch (err) {
+    showError('reg-email-error', 'Terjadi kesalahan server. Coba lagi.');
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg> Buat Akun`;
+  }
 }
 
 // Clear errors on input

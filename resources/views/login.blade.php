@@ -7,6 +7,7 @@
 <meta name="description" content="Masuk ke akun Rythmiq IoT Health Monitoring Anda.">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/auth.css">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
 
@@ -92,21 +93,24 @@
       </div>
     </div>
 
-    <!-- Success state (shown after login) -->
+    <!-- Success state (shown after OTP sent) -->
     <div class="auth-success" id="loginSuccess">
-      <div class="success-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"/>
+      <div class="success-icon" style="background: #dbeafe;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22,6 12,13 2,6"/>
         </svg>
       </div>
-      <div class="success-title">Login Berhasil!</div>
-      <div class="success-sub">Mengalihkan ke dashboard…</div>
+      <div class="success-title">Kode Terkirim!</div>
+      <div class="success-sub" id="successEmailHint">Memeriksa email Anda…</div>
     </div>
 
   </div>
 </div>
 
 <script>
+const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+
 // ---- Toggle password visibility ----
 function togglePassword(inputId, btnId) {
   const input = document.getElementById(inputId);
@@ -118,25 +122,18 @@ function togglePassword(inputId, btnId) {
     : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
 }
 
-// ---- SHA-256 hash (client-side demo) ----
-async function hashPassword(password) {
-  const enc  = new TextEncoder();
-  const buf  = await crypto.subtle.digest('SHA-256', enc.encode(password));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-}
-
-// ---- Form validation & submit ----
+// ---- Form validation helpers ----
 function showError(id, msg) {
   const el = document.getElementById(id);
   el.querySelector('span') && (el.querySelector('span').textContent = msg);
   el.classList.add('show');
-  el.previousElementSibling && el.previousElementSibling.querySelector('input').classList.add('error');
 }
 function hideError(id) {
   const el = document.getElementById(id);
   el && el.classList.remove('show');
 }
 
+// ---- Submit login to backend ----
 async function handleLogin(e) {
   e.preventDefault();
   const email = document.getElementById('login-email');
@@ -162,15 +159,34 @@ async function handleLogin(e) {
   btn.disabled = true;
   btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Memproses…`;
 
-  const hashed = await hashPassword(pw.value);
-  console.log('Hashed password (SHA-256):', hashed);
+  try {
+    const res  = await fetch('/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': CSRF,
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ email: email.value, password: pw.value }),
+    });
 
-  // Simulate loading then show success
-  setTimeout(() => {
-    document.getElementById('loginFormWrap').style.display = 'none';
-    document.getElementById('loginSuccess').classList.add('show');
-    setTimeout(() => { window.location.href = '/dashboard'; }, 1600);
-  }, 900);
+    const data = await res.json();
+
+    if (data.success) {
+      // Langsung redirect ke halaman OTP tanpa halaman peralihan
+      window.location.href = '/otp';
+    } else {
+      showError('email-error', data.message || 'Email atau password salah.');
+      email.classList.add('error');
+      pw.classList.add('error');
+      btn.disabled = false;
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Masuk`;
+    }
+  } catch (err) {
+    showError('email-error', 'Terjadi kesalahan server. Coba lagi.');
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Masuk`;
+  }
 }
 
 // Clear errors on input
