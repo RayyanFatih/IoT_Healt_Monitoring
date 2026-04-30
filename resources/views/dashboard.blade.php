@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,8 +7,25 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/dashboard.css">
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<!-- 🖼️ GANTI FAVICON: Letakkan favicon.ico / favicon.png di folder public/ lalu ubah href di bawah -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2.5'><polyline points='22 12 18 12 15 21 9 3 6 12 2 12'/></svg>">
 </head>
 <body>
+
+<!-- Mobile Header (hanya muncul di layar kecil) -->
+<div class="mobile-header">
+  <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileSidebar()" aria-label="Buka menu">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="mobile-brand">
+    <!-- 🖼️ GANTI LOGO (mobile): sama dengan logo sidebar -->
+    <div class="sidebar-logo-icon" style="width:28px;height:28px;border-radius:7px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    </div>
+    <span class="sidebar-logo-text" style="font-size:15px;">Rythmiq</span>
+  </div>
+</div>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
 
 <!-- LAYOUT WRAPPER -->
 <div class="layout">
@@ -17,10 +34,12 @@
   <aside class="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-icon">
+        <!-- 🖼️ GANTI LOGO ICON: Hapus <svg> ini, ganti dengan <img src="/images/logo-icon.png" alt="Logo" width="18" height="18"> -->
         <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
         </svg>
       </div>
+      <!-- 🖼️ GANTI NAMA BRAND: Bisa diganti dengan <img src="/images/logo-text.png" alt="Rythmiq" height="20"> -->
       <span class="sidebar-logo-text">Rythmiq</span>
     </div>
 
@@ -36,7 +55,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
         </svg>
-        History
+        Riwayat
       </a>
     </nav>
 
@@ -52,7 +71,7 @@
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
           <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
         </svg>
-        Logout
+        Keluar
       </a>
     </div>
   </aside>
@@ -62,7 +81,12 @@
 
     <!-- PAGE TITLE -->
     <div class="page-header">
-      <h1 class="page-title">Dashboard</h1>
+      <h1 class="page-title">Dasbor</h1>
+      <div class="live-indicator">
+        <span class="live-dot-badge"></span>
+        <span class="live-label">Live</span>
+        <span class="live-time">diperbarui <span id="last-updated">—</span></span>
+      </div>
     </div>
 
     <!-- 3 CARDS ROW: Stats | Condition | Sensor Status -->
@@ -70,7 +94,7 @@
 
       <!-- STATS CARD -->
       <div class="info-card">
-        <div class="info-card-title">Stats</div>
+        <div class="info-card-title">Statistik</div>
 
         <!-- Heart Rate -->
         <div class="metric-row">
@@ -109,7 +133,7 @@
 
       <!-- CONDITION CARD -->
       <div class="info-card" id="condition-card">
-        <div class="info-card-title">Condition</div>
+        <div class="info-card-title">Kondisi</div>
 
         <div class="condition-body">
           <!-- Status Icon -->
@@ -150,7 +174,7 @@
 
       <!-- SENSOR STATUS CARD -->
       <div class="info-card">
-        <div class="info-card-title">Sensor Status</div>
+        <div class="info-card-title">Status Sensor</div>
 
         <!-- Finger Detection -->
         <div class="sensor-row">
@@ -224,14 +248,14 @@
     <div class="chart-card">
       <div class="chart-header">
         <div class="chart-title-group">
-          <span class="chart-title-text">Chart</span>
+          <span class="chart-title-text">Grafik</span>
           <span class="chart-legend-inline" id="chart-legend">
             <span class="legend-item" id="legend-hr"><span class="legend-dot red"></span> Heart Rate (BPM)</span>
             <span class="legend-item" id="legend-spo2" style="margin-left:14px;"><span class="legend-dot blue"></span> SpO₂ (%)</span>
           </span>
         </div>
         <div class="chart-tabs">
-          <button class="chart-tab active" id="tab-both">Both</button>
+          <button class="chart-tab active" id="tab-both">Keduanya</button>
           <button class="chart-tab" id="tab-hr">Heart Rate</button>
           <button class="chart-tab" id="tab-spo2">SpO₂</button>
         </div>
@@ -266,6 +290,8 @@
   <!-- Avatar -->
   <div class="pf-avatar-wrap">
     <div class="pf-avatar">
+      <!-- 🖼️ AVATAR PENGGUNA: Initials otomatis dari nama.
+           Untuk mendukung upload foto, tambahkan <img> di sini dan sembunyikan <span> -->
       <span id="pf-initials">AF</span>
       <div class="pf-avatar-online"></div>
     </div>
@@ -738,7 +764,17 @@ function closeLogoutModal() {
   document.body.style.overflow = '';
 }
 function confirmLogout() {
-  window.location.href = '/login';
+  // POST ke /logout — menghapus session Laravel dengan benar
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '/logout';
+  const csrf = document.createElement('input');
+  csrf.type  = 'hidden';
+  csrf.name  = '_token';
+  csrf.value = document.querySelector('meta[name="csrf-token"]').content;
+  form.appendChild(csrf);
+  document.body.appendChild(form);
+  form.submit();
 }
 document.getElementById('logoutBackdrop').addEventListener('click', function(e) {
   if (e.target === this) closeLogoutModal();
@@ -746,6 +782,139 @@ document.getElementById('logoutBackdrop').addEventListener('click', function(e) 
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeLogoutModal();
 });
+</script>
+
+<script>
+// ===== MOBILE SIDEBAR =====
+function toggleMobileSidebar() {
+  const sidebar  = document.querySelector('.sidebar');
+  const btn      = document.getElementById('hamburgerBtn');
+  const overlay  = document.getElementById('mobileOverlay');
+  const isOpen   = sidebar.classList.toggle('mobile-open');
+  btn.classList.toggle('open', isOpen);
+  overlay.classList.toggle('open', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+function closeMobileSidebar() {
+  document.querySelector('.sidebar').classList.remove('mobile-open');
+  document.getElementById('hamburgerBtn').classList.remove('open');
+  document.getElementById('mobileOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+// Tutup sidebar mobile saat nav item diklik
+document.querySelectorAll('.sidebar .nav-item').forEach(item => {
+  item.addEventListener('click', closeMobileSidebar);
+});
+</script>
+
+<script>
+// ===== LIVE DATA POLLING =====
+// Fetch data sensor setiap 3 detik dari /api/vitals/live
+// 📡 Saat sensor ESP siap, endpoint tersebut akan mengembalikan data nyata.
+const MAX_POINTS = 20;
+let lastUpdateTime = null;
+
+async function fetchLiveVitals() {
+  try {
+    const res = await fetch('/api/vitals/live', {
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) return;
+    const d = await res.json();
+
+    // Update angka dengan animasi flash
+    flashNumber('stats-hr',   d.hr);
+    flashNumber('stats-spo2', d.spo2);
+
+    // Append titik baru ke chart & trim jika terlalu panjang
+    chart.data.labels.push(d.timestamp);
+    chart.data.datasets[0].data.push(d.hr);
+    chart.data.datasets[1].data.push(d.spo2);
+    if (chart.data.labels.length > MAX_POINTS) {
+      chart.data.labels.shift();
+      chart.data.datasets[0].data.shift();
+      chart.data.datasets[1].data.shift();
+    }
+    chart.update('none'); // update tanpa re-animasi penuh
+
+    // Update kondisi & sensor dari data live
+    updateConditionLive(d.is_normal);
+    updateSensorLive(d.finger_detected, d.signal_good);
+
+    lastUpdateTime = new Date();
+    renderLastUpdated();
+  } catch (err) {
+    console.warn('[Rythmiq] Gagal fetch live data:', err);
+  }
+}
+
+function flashNumber(id, value) {
+  const el = document.getElementById(id);
+  if (!el || String(el.textContent) === String(value)) return;
+  el.textContent = value;
+  el.classList.add('number-flash');
+  setTimeout(() => el.classList.remove('number-flash'), 500);
+}
+
+function renderLastUpdated() {
+  const el = document.getElementById('last-updated');
+  if (!el || !lastUpdateTime) return;
+  const sec = Math.round((new Date() - lastUpdateTime) / 1000);
+  el.textContent = sec <= 1 ? 'baru saja' : `${sec} dtk lalu`;
+}
+
+function updateConditionLive(isNormal) {
+  const card       = document.getElementById('condition-card');
+  const iconNormal = document.getElementById('condition-icon-normal');
+  const iconAbnorm = document.getElementById('condition-icon-abnormal');
+  const iconWrap   = document.getElementById('condition-icon-wrap');
+  const statusLabel= document.getElementById('condition-status-label');
+  const statusSub  = document.getElementById('condition-status-sub');
+  const warning    = document.getElementById('condition-warning-notice');
+  const badge      = document.getElementById('condition-badge');
+  const badgeText  = document.getElementById('condition-badge-text');
+
+  if (isNormal) {
+    iconNormal.style.display = ''; iconAbnorm.style.display = 'none';
+    iconWrap.className       = 'condition-icon-wrap normal';
+    statusLabel.textContent  = 'Normal'; statusLabel.className = 'condition-status-label normal';
+    statusSub.textContent    = 'Kondisi pasien baik dan stabil.';
+    warning.style.display    = 'none';
+    badge.className          = 'condition-badge normal'; badgeText.textContent = 'Normal';
+    card.classList.remove('abnormal');
+  } else {
+    iconNormal.style.display = 'none'; iconAbnorm.style.display = '';
+    iconWrap.className       = 'condition-icon-wrap abnormal';
+    statusLabel.textContent  = 'Tidak Normal'; statusLabel.className = 'condition-status-label abnormal';
+    statusSub.textContent    = 'Kondisi pasien perlu perhatian.';
+    warning.style.display    = 'flex';
+    badge.className          = 'condition-badge abnormal'; badgeText.textContent = 'Tidak Normal';
+    card.classList.add('abnormal');
+  }
+}
+
+function updateSensorLive(fingerDetected, signalGood) {
+  document.getElementById('finger-detected-svg').style.display   = fingerDetected ? '' : 'none';
+  document.getElementById('finger-undetected-svg').style.display = fingerDetected ? 'none' : '';
+  document.getElementById('finger-status-text').textContent      = fingerDetected ? 'Jari Terdeteksi' : 'Jari Tidak Terdeteksi';
+  const fb = document.getElementById('finger-badge');
+  fb.className = 'sensor-state-badge ' + (fingerDetected ? 'detected' : 'undetected');
+  document.getElementById('finger-badge-text').textContent       = fingerDetected ? 'Terdeteksi' : 'Tidak Terdeteksi';
+  document.getElementById('sensor-finger-icon').className        = 'sensor-row-icon finger' + (fingerDetected ? '' : ' bad');
+
+  document.getElementById('signal-good-svg').style.display = signalGood ? '' : 'none';
+  document.getElementById('signal-bad-svg').style.display  = signalGood ? 'none' : '';
+  document.getElementById('signal-status-text').textContent     = signalGood ? 'Sinyal Bagus' : 'Sinyal Buruk';
+  const sb = document.getElementById('signal-badge');
+  sb.className = 'sensor-state-badge ' + (signalGood ? 'good' : 'bad');
+  document.getElementById('signal-badge-text').textContent      = signalGood ? 'Bagus' : 'Buruk';
+  document.getElementById('sensor-signal-icon').className       = 'sensor-row-icon signal' + (signalGood ? '' : ' bad');
+}
+
+// Mulai polling
+fetchLiveVitals();
+setInterval(fetchLiveVitals, 3000);
+setInterval(renderLastUpdated, 1000);
 </script>
 </body>
 </html>

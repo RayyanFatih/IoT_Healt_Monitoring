@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,8 +9,26 @@
 <link rel="stylesheet" href="/css/history.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<!-- 🖼️ GANTI FAVICON: Letakkan favicon.ico / favicon.png di folder public/ lalu ubah href di bawah -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2.5'><polyline points='22 12 18 12 15 21 9 3 6 12 2 12'/></svg>">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
+
+<!-- Mobile Header (hanya muncul di layar kecil) -->
+<div class="mobile-header">
+  <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileSidebar()" aria-label="Buka menu">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="mobile-brand">
+    <!-- 🖼️ GANTI LOGO (mobile): sama dengan logo sidebar -->
+    <div class="sidebar-logo-icon" style="width:28px;height:28px;border-radius:7px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    </div>
+    <span class="sidebar-logo-text" style="font-size:15px;">Rythmiq</span>
+  </div>
+</div>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
 
 <!-- LAYOUT WRAPPER -->
 <div class="layout">
@@ -19,10 +37,12 @@
   <aside class="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-icon">
+        <!-- 🖼️ GANTI LOGO ICON: Hapus <svg> ini, ganti dengan <img src="/images/logo-icon.png" alt="Logo" width="18" height="18"> -->
         <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
         </svg>
       </div>
+      <!-- 🖼️ GANTI NAMA BRAND: Bisa diganti dengan <img src="/images/logo-text.png" alt="Rythmiq" height="20"> -->
       <span class="sidebar-logo-text">Rythmiq</span>
     </div>
 
@@ -38,7 +58,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
         </svg>
-        History
+        Riwayat
       </a>
     </nav>
 
@@ -54,7 +74,7 @@
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
           <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
         </svg>
-        Logout
+        Keluar
       </a>
     </div>
   </aside>
@@ -64,7 +84,7 @@
 
     <!-- PAGE TITLE -->
     <div class="page-header">
-      <h1 class="page-title">History</h1>
+      <h1 class="page-title">Riwayat</h1>
     </div>
 
     <!-- SUMMARY CARDS -->
@@ -75,7 +95,7 @@
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
           </svg>
         </div>
-        <div class="summary-card-label">Avg Heart Rate</div>
+        <div class="summary-card-label">Rata-rata HR</div>
         <div class="summary-card-value" id="avg-hr">—</div>
         <div class="summary-card-unit">bpm</div>
       </div>
@@ -86,7 +106,7 @@
             <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
           </svg>
         </div>
-        <div class="summary-card-label">Avg SpO<sub>2</sub></div>
+        <div class="summary-card-label">Rata-rata SpO<sub>2</sub></div>
         <div class="summary-card-value" id="avg-spo2">—</div>
         <div class="summary-card-unit">%</div>
       </div>
@@ -98,9 +118,9 @@
             <polyline points="9 12 11 14 15 10"/>
           </svg>
         </div>
-        <div class="summary-card-label">Normal Readings</div>
+        <div class="summary-card-label">Data Normal</div>
         <div class="summary-card-value" id="count-normal">—</div>
-        <div class="summary-card-unit">records</div>
+        <div class="summary-card-unit">rekaman</div>
       </div>
 
       <div class="summary-card">
@@ -110,9 +130,9 @@
             <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
         </div>
-        <div class="summary-card-label">Abnormal Readings</div>
+        <div class="summary-card-label">Data Tidak Normal</div>
         <div class="summary-card-value" id="count-abnormal">—</div>
-        <div class="summary-card-unit">records</div>
+        <div class="summary-card-unit">rekaman</div>
       </div>
     </div>
 
@@ -200,6 +220,8 @@
   <!-- Avatar -->
   <div class="pf-avatar-wrap">
     <div class="pf-avatar">
+      <!-- 🖼️ AVATAR PENGGUNA: Initials otomatis dari nama.
+           Untuk mendukung upload foto, tambahkan <img> di sini dan sembunyikan <span> -->
       <span id="pf-initials">AF</span>
       <div class="pf-avatar-online"></div>
     </div>
@@ -747,13 +769,46 @@ function closeLogoutModal() {
   document.body.style.overflow = '';
 }
 function confirmLogout() {
-  window.location.href = '/login';
+  // POST ke /logout — menghapus session Laravel dengan benar
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '/logout';
+  const csrf = document.createElement('input');
+  csrf.type  = 'hidden';
+  csrf.name  = '_token';
+  csrf.value = document.querySelector('meta[name="csrf-token"]') ?.
+                 content ?? '';
+  form.appendChild(csrf);
+  document.body.appendChild(form);
+  form.submit();
 }
 document.getElementById('logoutBackdrop').addEventListener('click', function(e) {
   if (e.target === this) closeLogoutModal();
 });
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeLogoutModal();
+});
+</script>
+
+<script>
+// ===== MOBILE SIDEBAR =====
+function toggleMobileSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const btn     = document.getElementById('hamburgerBtn');
+  const overlay = document.getElementById('mobileOverlay');
+  const isOpen  = sidebar.classList.toggle('mobile-open');
+  btn.classList.toggle('open', isOpen);
+  overlay.classList.toggle('open', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+function closeMobileSidebar() {
+  document.querySelector('.sidebar').classList.remove('mobile-open');
+  document.getElementById('hamburgerBtn').classList.remove('open');
+  document.getElementById('mobileOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.querySelectorAll('.sidebar .nav-item').forEach(item => {
+  item.addEventListener('click', closeMobileSidebar);
 });
 </script>
 </body>

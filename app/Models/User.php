@@ -23,6 +23,8 @@ class User extends Authenticatable
         'password',
         'age',
         'dob',
+        'otp_code',
+        'otp_expires_at',
     ];
 
     /**
