@@ -2,8 +2,12 @@
 
 /**
  * Vercel PHP Entry Point for Laravel
- * Semua request dari Vercel diteruskan ke Laravel melalui file ini.
  */
+
+// Show ALL PHP errors so we can see what's crashing
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
 
 define('LARAVEL_START', microtime(true));
 
@@ -20,9 +24,22 @@ foreach ([
     }
 }
 
-require __DIR__ . '/../vendor/autoload.php';
+// Check autoloader exists
+$autoloader = __DIR__ . '/../vendor/autoload.php';
+if (!file_exists($autoloader)) {
+    http_response_code(500);
+    die('ERROR: vendor/autoload.php not found. Composer install may have failed.');
+}
 
-$app = require_once __DIR__ . '/../bootstrap/app.php';
+require $autoloader;
+
+$bootstrapFile = __DIR__ . '/../bootstrap/app.php';
+if (!file_exists($bootstrapFile)) {
+    http_response_code(500);
+    die('ERROR: bootstrap/app.php not found.');
+}
+
+$app = require_once $bootstrapFile;
 
 // Tell Laravel to use /tmp/storage instead of the read-only storage/
 $app->useStoragePath($tmpStorage);
