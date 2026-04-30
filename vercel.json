@@ -1,7 +1,5 @@
 {
   "version": 2,
-  "framework": null,
-  "outputDirectory": "public",
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.7.2"
@@ -11,9 +9,8 @@
     { "src": "/css/(.*)",    "dest": "/public/css/$1" },
     { "src": "/js/(.*)",     "dest": "/public/js/$1" },
     { "src": "/images/(.*)", "dest": "/public/images/$1" },
-    { "src": "/build/(.*)",  "dest": "/public/build/$1" },
     { "src": "/(favicon\\.ico|robots\\.txt)", "dest": "/public/$1" },
-    { "src": "/(.*)", "dest": "/api/index.php" }
+    { "src": "/(.*)",        "dest": "/api/index.php" }
   ]
 }
 

@@ -1,0 +1,9 @@
+# Exclude Node.js files so Vercel doesn't run npm/Vite build
+package.json
+package-lock.json
+node_modules
+
+# Exclude local dev files
+.env
+.env.*
+set-vercel-env.ps1
